@@ -140,6 +140,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 54.792
+    },
+    {
+      "id": "alegria-indie-01",
+      "family": "joy",
+      "level": 1,
+      "emotion": "Alegría",
+      "tradition": "Contemporary / indie rock quartet",
+      "title": "Alegría · Cuarteto indie",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/joy/alegria/indie-01.mp3",
+      "duration": 56.16,
+      "sourceUrl": "https://suno.com/song/efbfcb6e-1cb0-4158-a238-5f57858ae0ef",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Jangling guitars, melodic bass and buoyant small-band rhythms intended to convey everyday joy at middle intensity.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 56.16
     }
   ]
 }
