@@ -34,6 +34,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 54.792
+    },
+    {
+      "id": "asombro-orquesta-01",
+      "family": "surprise",
+      "level": 0,
+      "emotion": "Asombro",
+      "tradition": "Classical / cinematic orchestra",
+      "title": "Asombro · Orquesta",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/surprise/asombro/orquesta-01.mp3",
+      "duration": 54.84,
+      "sourceUrl": "https://suno.com/song/f6695608-42cb-4529-8969-22416c196a9f",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Unexpected harmonic changes, wide register leaps and shimmering orchestral colors intended to convey overwhelming astonishment.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 54.84
     }
   ]
 }
