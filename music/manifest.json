@@ -102,6 +102,27 @@
       "review": "Technical decode and level checks passed; listening review pending. Includes vocalizations by design.",
       "start": 0,
       "end": 55.704
+    },
+    {
+      "id": "repugnancia-01",
+      "family": "disgust",
+      "level": 0,
+      "emotion": "Repugnancia",
+      "tradition": "Experimental / cinematic with vocalizations",
+      "title": "Repugnancia · Fragmento",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/disgust/repugnancia/fragmento-01.mp3",
+      "duration": 55,
+      "sourceUrl": "https://suno.com/song/a6e273f7-6460-44e4-8de6-6088396c6748",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "User-selected version intended to convey visceral revulsion; generation metadata includes bass vocalizations. Exact microtonal tuning has not been verified.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "sourceDuration": 159.432,
+      "sourceStart": 0,
+      "sourceEnd": 55,
+      "processing": "55-second opening excerpt, 1.5-second ending fade; generation provenance metadata retained.",
+      "start": 0,
+      "end": 55
     }
   ]
 }
