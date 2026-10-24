@@ -6,7 +6,7 @@ Una aplicación en español para voz y habla, presentaciones y slam: una rueda d
 
 1. Abre **Settings → Pages** en este repositorio.
 2. En **Build and deployment**, elige **Deploy from a branch**.
-3. Selecciona **main** y **/(root)**; pulsa **Save**.
+3. Selecciona **main** y **/docs**; pulsa **Save**.
 4. Cuando GitHub termine de publicar, abre https://francuscus.github.io/rueda-emotiva/.
 
 No hay instalación, dependencias de JavaScript, servidor ni claves. Los archivos de la aplicación son `index.html`, `styles.css` y `app.js`. Se puede alojar también en cualquier servidor HTTPS estático. Las fuentes de Google son opcionales; hay tipografías alternativas locales.
@@ -53,3 +53,7 @@ Prueba de clase: explora dos emociones; carga un archivo y recórtalo; desactiva
 ## Licencia
 
 Código bajo MIT; consulta `LICENSE`. Audio añadido por los usuarios sujeto a sus respectivos permisos y licencias.
+
+## Carpeta de publicación
+
+GitHub Pages debe publicar desde `main` → `/docs`. La carpeta `docs/` contiene la copia publicada de `index.html`, `styles.css` y `app.js`; sincroniza esos archivos cuando cambies la aplicación de la raíz.
