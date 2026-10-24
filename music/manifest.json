@@ -85,6 +85,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 53.904
+    },
+    {
+      "id": "extasis-camara-01",
+      "family": "joy",
+      "level": 0,
+      "emotion": "Éxtasis",
+      "tradition": "Cinematic / instruments and wordless voices",
+      "title": "Éxtasis · Cámara y voces",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/joy/extasis/camara-01.mp3",
+      "duration": 55.704,
+      "sourceUrl": "https://suno.com/song/83cb6263-ba73-423f-aee5-7bea9f0beb28",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "User-selected interpretation of ecstasy; embedded generation text specifies male and female nonlexical vocalizations and sighs.",
+      "review": "Technical decode and level checks passed; listening review pending. Includes vocalizations by design.",
+      "start": 0,
+      "end": 55.704
     }
   ]
 }
