@@ -289,6 +289,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 54.864
+    },
+    {
+      "id": "serenidad-guitarra-01",
+      "family": "joy",
+      "level": 2,
+      "emotion": "Serenidad",
+      "tradition": "Classical / solo nylon-string guitar",
+      "title": "Serenidad · Guitarra sola",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/joy/serenidad/guitarra-01.mp3",
+      "duration": 54.84,
+      "sourceUrl": "https://suno.com/song/9002410e-b9e2-49b7-8b99-cd1fb7f9b0b1",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Solo nylon-string guitar, gentle arpeggios and relaxed phrasing intended to convey serenity at outer-ring intensity.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 54.84
     }
   ]
 }
