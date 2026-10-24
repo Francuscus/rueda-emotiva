@@ -123,6 +123,23 @@
       "processing": "55-second opening excerpt, 1.5-second ending fade; generation provenance metadata retained.",
       "start": 0,
       "end": 55
+    },
+    {
+      "id": "furia-orquesta-01",
+      "family": "anger",
+      "level": 0,
+      "emotion": "Furia",
+      "tradition": "Classical / cinematic orchestra",
+      "title": "Furia · Orquesta",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/anger/furia/orquesta-01.mp3",
+      "duration": 54.792,
+      "sourceUrl": "https://suno.com/song/2c02405a-980c-440b-9f27-8ad741dbdb1d",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Aggressive orchestral attacks, asymmetrical ostinatos and forceful percussion intended to convey explosive anger.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 54.792
     }
   ]
 }
