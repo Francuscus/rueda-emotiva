@@ -259,6 +259,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 55.224
+    },
+    {
+      "id": "asco-marimba-01",
+      "family": "disgust",
+      "level": 1,
+      "emotion": "Asco",
+      "tradition": "Solo marimba / user-selected interpretation",
+      "title": "Asco · Marimba sola",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/disgust/asco/marimba-01.mp3",
+      "duration": 55.584,
+      "sourceUrl": "https://suno.com/song/3ac81e3f-3da8-4cac-bb92-2af765a7c7e9",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "User-selected solo marimba recording assigned to Asco in the middle-intensity ring.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 55.584
     }
   ]
 }
