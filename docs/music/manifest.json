@@ -157,6 +157,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 56.16
+    },
+    {
+      "id": "confianza-souljazz-01",
+      "family": "trust",
+      "level": 1,
+      "emotion": "Confianza",
+      "tradition": "Contemporary / soul-jazz quartet",
+      "title": "Confianza · Soul jazz",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/trust/confianza/souljazz-01.mp3",
+      "duration": 54.552,
+      "sourceUrl": "https://suno.com/song/7f0440ef-73cc-4196-842f-5c10da945c50",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Warm Rhodes, rounded bass, relaxed pocket and supportive musical responses intended to convey trust at middle intensity.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 54.552
     }
   ]
 }
