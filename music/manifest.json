@@ -340,6 +340,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 54.96
+    },
+    {
+      "id": "interes-oud-01",
+      "family": "anticipation",
+      "level": 2,
+      "emotion": "Interés",
+      "tradition": "Levantine / solo oud",
+      "title": "Interés · Oud solo",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/anticipation/interes/oud-01.mp3",
+      "duration": 54.792,
+      "sourceUrl": "https://suno.com/song/a2e9e2f3-29b0-4e7b-ace6-eb5020918b02",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Exploratory oud phrases, modal variation and listening pauses intended to convey gentle curiosity and interest.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 54.792
     }
   ]
 }
