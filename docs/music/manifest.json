@@ -1,4 +1,22 @@
 {
   "version": 1,
-  "passages": []
+  "passages": [
+    {
+      "id": "afliccion-cello-01",
+      "family": "sadness",
+      "level": 0,
+      "emotion": "Aflicción",
+      "tradition": "Classical / chamber elegy",
+      "title": "Aflicción · Lamento de cello",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/sadness/afliccion/cello-01.mp3",
+      "duration": 57.552,
+      "sourceUrl": "https://suno.com/song/27b6f4cf-9cc9-4de0-8683-83134bc34bc5",
+      "license": "Generated under the user's Suno Premier subscription; user-provided official MP3 download. Subject to Suno terms: https://suno.com/terms. Not covered by the repository MIT code license.",
+      "rationale": "Solo cello lament, sparse piano, descending chromatic voices and unresolved suspensions intended to convey profound grief.",
+      "review": "Technical decode and level checks passed; emotional fit and absence of vocals await listening review.",
+      "start": 0,
+      "end": 57.552
+    }
+  ]
 }
