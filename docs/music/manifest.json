@@ -191,6 +191,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 55.584
+    },
+    {
+      "id": "sorpresa-artpop-01",
+      "family": "surprise",
+      "level": 1,
+      "emotion": "Sorpresa",
+      "tradition": "Contemporary / art-pop quartet",
+      "title": "Sorpresa · Art pop",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/surprise/sorpresa/artpop-01.mp3",
+      "duration": 55.224,
+      "sourceUrl": "https://suno.com/song/e89c8416-a1c4-40ef-9804-9096c6169f06",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Small-band stop-start rhythms, unexpected harmonies and changes of texture intended to convey surprise below overwhelming astonishment.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 55.224
     }
   ]
 }
