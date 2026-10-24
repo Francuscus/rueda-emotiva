@@ -242,6 +242,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 54.792
+    },
+    {
+      "id": "anticipacion-trad-01",
+      "family": "anticipation",
+      "level": 1,
+      "emotion": "Anticipación",
+      "tradition": "Contemporary / acoustic trad quartet",
+      "title": "Anticipación · Cuarteto trad",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/anticipation/anticipacion/trad-01.mp3",
+      "duration": 55.224,
+      "sourceUrl": "https://suno.com/song/113b39b0-7e94-4475-8471-bf6b10014ded",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Interlocking fiddle, mandolin, guitar and hand percussion intended to convey gathering expectation below hypervigilance.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 55.224
     }
   ]
 }
