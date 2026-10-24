@@ -68,6 +68,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 56.424
+    },
+    {
+      "id": "vigilancia-camara-01",
+      "family": "anticipation",
+      "level": 0,
+      "emotion": "Vigilancia",
+      "tradition": "Minimalist / cinematic chamber music",
+      "title": "Vigilancia · Cámara",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/anticipation/vigilancia/camara-01.mp3",
+      "duration": 53.904,
+      "sourceUrl": "https://suno.com/song/b9c3613d-47fb-41d5-9f78-d0b8a3f48a4d",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Displaced ostinatos, precise attacks, suspended harmony and exposed silences intended to convey extreme alertness.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 53.904
     }
   ]
 }
