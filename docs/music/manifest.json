@@ -225,6 +225,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 54.552
+    },
+    {
+      "id": "ira-garage-01",
+      "family": "anger",
+      "level": 1,
+      "emotion": "Ira",
+      "tradition": "Contemporary / garage-rock trio",
+      "title": "Ira · Trío garage",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/anger/ira/garage-01.mp3",
+      "duration": 54.792,
+      "sourceUrl": "https://suno.com/song/2e8be164-0768-4a8d-930e-2b79619502d4",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Coiled guitar riffs, assertive bass and punchy drums intended to convey directed anger below uncontrolled fury.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 54.792
     }
   ]
 }
