@@ -10,6 +10,17 @@ const families = [
   {id:'anger', hue:355, names:['Furia','Ira','Molestia'], work:'Holst · Mars, the Bringer of War', query:'Holst Mars Bringer of War orchestra', notes:[36,36,43,37,36,48,43,37], beat:.22},
   {id:'anticipation', hue:26, names:['Vigilancia','Anticipación','Interés'], work:'John Williams · Jaws, Main Title', query:'John Williams Jaws Main Title official audio', notes:[40,41,40,41,40,43,40,41], beat:.46}
 ];
+const musicLinks = {"joy":"https://www.youtube.com/watch?v=-8wS-1Eqonk","fear":"https://www.youtube.com/watch?v=ea_pWmfLlqE","surprise":"https://www.youtube.com/watch?v=9K3GQdD30F0","sadness":"https://www.youtube.com/watch?v=N3MHeNt6Yjs","anger":"https://www.youtube.com/watch?v=1sUwBcJ5Atw","anticipation":"https://www.youtube.com/watch?v=BePfzCOMRZQ"};
+function recommendation(id) {
+  const f=family(id),direct=musicLinks[id];
+  return {url:direct||'https://www.youtube.com/results?search_query='+encodeURIComponent(f.query),label:(direct?'Escuchar en YouTube: ':'Buscar en YouTube: ')+f.work};
+}
+function showRecommendation(id) {
+  const link=recommendation(id);
+  $('suggestedTrackLink').href=link.url;
+  $('suggestedTrackLink').textContent=link.label+' ↗';
+  $('suggestedTrack').hidden=false;
+}
 const $ = id => document.getElementById(id);
 let mode='explore', selected=null, choice=null, revealed=false, active=false, recording=false, busy=false;
 let ctx, musicBus, monitorGain, mixGain, voiceGain, compressor, mixedDestination, voiceDestination, source, micStream, micNode;
@@ -91,9 +102,9 @@ async function playChoice(p,level=0){
     choice={...p,level,roundId:crypto.randomUUID()};revealed=mode==='explore';selected={id:p.family,level};
     source=ctx.createBufferSource();source.buffer=buffer;source.loop=true;source.loopStart=start;source.loopEnd=end;source.connect(musicBus);source.start(0,start);active=true;
     if(mode==='explore'){
-      $('studioHeading').textContent=family(p.family).names[level];$('trackInfo').textContent=p.title+' · El fragmento se repite hasta detenerlo.';
+      showRecommendation(p.family);$('studioHeading').textContent=family(p.family).names[level];$('trackInfo').textContent=p.title+' · El fragmento se repite hasta detenerlo.';
     }else{
-      $('studioHeading').textContent='Escucha. Deja que cambie tu voz.';$('trackInfo').textContent='Pasaje oculto. Escucha unos segundos y después graba tu poema.';
+      $('suggestedTrack').hidden=true;$('studioHeading').textContent='Escucha. Deja que cambie tu voz.';$('trackInfo').textContent='Pasaje oculto. Escucha unos segundos y después graba tu poema.';
       $('guess').textContent='Público: elige una emoción en la rueda.';highlight(null,null);
     }
     message(p.kind==='demo'&&mode==='explore'?'Escuchando un boceto sintético de demostración.':'Música en reproducción. Puedes empezar a grabar.');
@@ -112,7 +123,7 @@ function renderControls(){
   $('record').classList.toggle('recording',recording);
 }
 function setMode(next){
-  if(recording||busy)return;loadSequence++;stopSource();choice=null;selected=null;revealed=false;mode=next;
+  if(recording||busy)return;loadSequence++;stopSource();choice=null;selected=null;revealed=false;mode=next;$('suggestedTrack').hidden=true;$('musicResources').hidden=mode==='challenge';
   $('exploreMode').setAttribute('aria-pressed',String(mode==='explore'));$('challengeMode').setAttribute('aria-pressed',String(mode==='challenge'));
   $('random').hidden=mode!=='challenge';$('challengeInstructions').hidden=mode!=='challenge';$('guessPanel').hidden=mode!=='challenge';
   $('badge').textContent=mode==='explore'?'Exploración':'Reto a ciegas';$('wheelHeading').textContent=mode==='explore'?'Elige una emoción':'¿Qué emoción escuchas en su voz?';$('wheelHint').textContent=mode==='explore'?'Haz clic para escuchar':'Haz clic para adivinar';
@@ -155,7 +166,7 @@ function finishRecording(){
 }
 function formatTime(s){return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;}
 function reveal(){
-  if(!choice||recording||busy)return;revealed=true;
+  if(!choice||recording||busy)return;revealed=true;showRecommendation(choice.family);$('musicResources').hidden=false;
   $('studioHeading').textContent=family(choice.family).names[choice.level];$('trackInfo').textContent=choice.title;highlight(choice.family,choice.level);
   for(const t of takes)if(t.choice.roundId===choice.roundId)t.revealed=true;
   renderTakes();renderControls();message('Emoción revelada. Escucha la interpretación con el público.');
@@ -213,7 +224,7 @@ async function importLibrary(){
 }
 async function init(){
   drawWheel();families.forEach(f=>{const option=document.createElement('option');option.value=f.id;option.textContent=`${f.names[0]} / ${f.names[1]}`;$('familySelect').append(option);
-    const a=document.createElement('a');a.href='https://www.youtube.com/results?search_query='+encodeURIComponent(f.query);a.target='_blank';a.rel='noopener noreferrer';a.textContent=f.names[0];const span=document.createElement('span');span.textContent=f.work+' ↗';a.append(span);$('suggestions').append(a);});
+    const a=document.createElement('a');const recommended=recommendation(f.id);a.href=recommended.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=f.names[0];const span=document.createElement('span');span.textContent=f.work+' · '+(musicLinks[f.id]?'Escuchar':'Buscar en YouTube')+' ↗';a.append(span);$('suggestions').append(a);});
   try{db=await openDB();custom=await dbAll();}catch{$('libraryStatus').textContent='El almacenamiento local no está disponible. Puedes cargar audio para esta sesión y exportar tu colección.';}
   renderLibrary();renderControls();
 }
