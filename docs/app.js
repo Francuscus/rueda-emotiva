@@ -24,7 +24,7 @@ function showRecommendation(id) {
 const $ = id => document.getElementById(id);
 let mode='explore', selected=null, choice=null, revealed=false, active=false, recording=false, busy=false;
 let ctx, musicBus, monitorGain, mixGain, voiceGain, compressor, mixedDestination, voiceDestination, source, micStream, micNode;
-let mixedRecorder, voiceRecorder, timerHandle, startedAt, db=null, custom=[], takes=[], loadSequence=0;
+let mixedRecorder, voiceRecorder, timerHandle, startedAt, db=null, custom=[], curated=[], takes=[], loadSequence=0;
 const sketchCache=new Map();
 function message(text){$('status').textContent=text;}
 function fail(error){console.error(error);message(error.name==='NotAllowedError'?'Permite el micrófono en los ajustes del sitio y vuelve a intentarlo.':error.message || 'No se pudo completar la operación.');}
@@ -54,7 +54,7 @@ async function wheelClick(id,level){
   }
   if(recording)return;
   selected={id,level};highlight(id,level);
-  const pool=await candidates(id);if(!pool.length)throw new Error('Añade un pasaje para esta familia o activa los bocetos de demostración.');
+  const pool=await candidates(id,level);if(!pool.length)throw new Error('Añade un pasaje para esta familia o activa los bocetos de demostración.');
   await playChoice(pool[Math.floor(Math.random()*pool.length)],level);
 }
 function audioSetup(){
@@ -84,18 +84,47 @@ async function sketch(id,variant){
   }
   const buffer=await offline.startRendering();sketchCache.set(key,buffer);return buffer;
 }
-async function candidates(id=null){
-  let pool=custom.filter(p=>!id||p.family===id).map(p=>({...p,kind:'file'}));
-  if($('demos').checked)for(const f of families.filter(f=>!id||f.id===id))for(let v=0;v<2;v++)pool.push({kind:'demo',family:f.id,variant:v,title:`Boceto original ${v+1} · ${f.names[0]}`});
+async function loadCurated(){
+  const response=await fetch('music/manifest.json');
+  if(!response.ok)throw new Error('No se pudo cargar la biblioteca publicada.');
+  const data=await response.json();
+  if(data.version!==1||!Array.isArray(data.passages))throw new Error('Biblioteca publicada no válida.');
+  curated=data.passages.map(p=>{
+    if(!family(p.family)||!Number.isInteger(p.level)||p.level<0||p.level>2||typeof p.title!=='string'||typeof p.path!=='string'||!p.path.startsWith('music/audio/')||p.path.includes('..')||!Number.isFinite(p.duration)||p.duration<40||p.duration>60)throw new Error('Pasaje publicado no válido.');
+    return {...p,kind:'curated',start:0,end:p.duration};
+  });
+}
+async function candidates(id=null,level=null){
+  // Legacy family-only uploads retain their broad availability. New files have an explicit level.
+  let pool=[];
+  for(const p of custom){
+    if(id&&p.family!==id)continue;
+    const levels=Number.isInteger(p.level)?[p.level]:[0,1,2];
+    for(const l of levels)if(level===null||l===level)pool.push({...p,level:l,kind:'file'});
+  }
+  pool.push(...curated.filter(p=>(!id||p.family===id)&&(level===null||p.level===level)));
+  if($('demos').checked)for(const f of families.filter(f=>!id||f.id===id))for(const l of [0,1,2]){
+    if(level!==null&&l!==level)continue;
+    // Published recordings replace demos only in their own segment; outer rings keep their sounds.
+    if(curated.some(p=>p.family===f.id&&p.level===l))continue;
+    for(let v=0;v<2;v++)pool.push({kind:'demo',family:f.id,level:l,variant:v,title:`Boceto original ${v+1} · ${f.names[l]}`});
+  }
   return pool;
 }
+
 function stopSource(){if(source){source.onended=null;try{source.stop();}catch{}source.disconnect();source=null;}active=false;}
 function stopMusic(){if(recording||busy)return;loadSequence++;stopSource();renderControls();message('Música detenida.');}
-async function playChoice(p,level=0){
+async function playChoice(p,level=p.level??0){
   const token=++loadSequence;busy=true;renderControls();stopSource();message('Preparando audio…');
   try{
     audioSetup();await ctx.resume();
-    const buffer=p.kind==='demo'?await sketch(p.family,p.variant):await ctx.decodeAudioData(await p.blob.arrayBuffer());
+    let buffer;
+    if(p.kind==='demo')buffer=await sketch(p.family,p.variant);
+    else if(p.kind==='curated'){
+      const response=await fetch(p.path);
+      if(!response.ok)throw new Error('No se pudo descargar este pasaje. Inténtalo de nuevo.');
+      buffer=await ctx.decodeAudioData(await response.arrayBuffer());
+    }else buffer=await ctx.decodeAudioData(await p.blob.arrayBuffer());
     if(token!==loadSequence)return;
     const start=p.start||0,end=p.end==null?buffer.duration:Math.min(p.end,buffer.duration);
     if(end<=start)throw new Error('El fragmento no contiene audio. Revisa inicio y final.');
@@ -198,34 +227,35 @@ async function upload(e){
   try{audioSetup();for(const file of files){
     if(file.size>40*1024*1024)throw new Error('Cada archivo debe ocupar menos de 40 MB. Recorta el audio antes de añadirlo.');
     const buffer=await ctx.decodeAudioData(await file.arrayBuffer());if(start>=buffer.duration||end!==null&&end>buffer.duration+.05)throw new Error(`El fragmento indicado queda fuera de «${file.name}» (${buffer.duration.toFixed(1)} s).`);
-    const p={id:crypto.randomUUID(),family:$('familySelect').value,title:file.name,blob:file,start,end:end??buffer.duration};allStored=(await addPassage(p))&&allStored;count++;
+    const p={id:crypto.randomUUID(),family:$('familySelect').value.split(':')[0],level:Number($('familySelect').value.split(':')[1]),title:file.name,blob:file,start,end:end??buffer.duration};allStored=(await addPassage(p))&&allStored;count++;
   }$('audioFiles').value='';$('libraryStatus').textContent=`${count} pasaje(s) añadido(s). ${allStored?'Guardados en este navegador.':'Solo en esta sesión: exporta la colección para conservarla.'}`;
   }finally{busy=false;renderControls();renderLibrary();}
 }
 function renderLibrary(){
   const list=$('passageList');list.replaceChildren();
-  if(!custom.length){const p=document.createElement('p');p.className='caption';p.textContent='Todavía no has añadido archivos de audio.';list.append(p);}
-  for(const p of custom){const row=document.createElement('div');row.className='passage';const label=document.createElement('span');label.textContent=`${family(p.family).names[0]} · ${p.title} · ${p.start.toFixed(1)}–${p.end.toFixed(1)} s`;
-    const remove=document.createElement('button');remove.textContent='Quitar';remove.onclick=guard(async()=>{if(db)try{await dbWrite(p,true);}catch{throw new Error('No se pudo eliminar el pasaje guardado.');}custom=custom.filter(x=>x.id!==p.id);renderLibrary();});row.append(label,remove);list.append(row);}
+  if(!custom.length&&!curated.length){const p=document.createElement('p');p.className='caption';p.textContent='Todavía no has añadido archivos de audio.';list.append(p);}
+  for(const p of [...curated,...custom]){const row=document.createElement('div');row.className='passage';const label=document.createElement('span');label.textContent=`${Number.isInteger(p.level)?family(p.family).names[p.level]:family(p.family).names.join(' / ')} · ${p.title} · ${p.start.toFixed(1)}–${p.end.toFixed(1)} s`;
+    const remove=document.createElement('button');remove.textContent='Quitar';remove.onclick=guard(async()=>{if(db)try{await dbWrite(p,true);}catch{throw new Error('No se pudo eliminar el pasaje guardado.');}custom=custom.filter(x=>x.id!==p.id);renderLibrary();});row.append(label);if(p.kind!=='curated')row.append(remove);else{const info=document.createElement('span');info.textContent='Biblioteca incluida';row.append(info);}list.append(row);}
 }
 function blobBase64(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});}
 function downloadBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}
-async function exportLibrary(){if(!custom.length)throw new Error('Añade al menos un archivo antes de exportar.');if(custom.reduce((n,p)=>n+p.blob.size,0)>100*1024*1024)throw new Error('La colección supera 100 MB. Reduce el tamaño de los archivos antes de exportar.');const passages=[];for(const p of custom){const {blob,...meta}=p;passages.push({...meta,type:blob.type,audio:await blobBase64(blob)});}downloadBlob(new Blob([JSON.stringify({version:1,passages})],{type:'application/json'}),'rueda-emotiva-coleccion.json');}
+async function exportLibrary(){if(!custom.length)throw new Error('Añade al menos un archivo antes de exportar.');if(custom.reduce((n,p)=>n+p.blob.size,0)>100*1024*1024)throw new Error('La colección supera 100 MB. Reduce el tamaño de los archivos antes de exportar.');const passages=[];for(const p of custom){const {blob,...meta}=p;passages.push({...meta,type:blob.type,audio:await blobBase64(blob)});}downloadBlob(new Blob([JSON.stringify({version:2,passages})],{type:'application/json'}),'rueda-emotiva-coleccion.json');}
 async function importLibrary(){
   if(recording||busy)return;const file=$('importLibrary').files[0];if(!file)return;if(file.size>140*1024*1024)throw new Error('La colección es demasiado grande. Máximo: 140 MB.');
   busy=true;renderControls();let allStored=true,count=0;
-  try{const data=JSON.parse(await file.text());if(data.version!==1||!Array.isArray(data.passages)||data.passages.length>100)throw new Error('Colección no válida (máximo 100 pasajes).');audioSetup();
+  try{const data=JSON.parse(await file.text());if(![1,2].includes(data.version)||!Array.isArray(data.passages)||data.passages.length>100)throw new Error('Colección no válida (máximo 100 pasajes).');audioSetup();
     for(const p of data.passages){
-      if(!family(p.family)||typeof p.audio!=='string'||typeof p.title!=='string'||!Number.isFinite(p.start)||!Number.isFinite(p.end)||p.start<0||p.end<=p.start)throw new Error('Hay un pasaje no válido en la colección.');
+      if((p.level!==undefined&&(!Number.isInteger(p.level)||p.level<0||p.level>2))||!family(p.family)||typeof p.audio!=='string'||typeof p.title!=='string'||!Number.isFinite(p.start)||!Number.isFinite(p.end)||p.start<0||p.end<=p.start)throw new Error('Hay un pasaje no válido en la colección.');
       const bytes=Uint8Array.from(atob(p.audio),c=>c.charCodeAt(0));if(bytes.length>40*1024*1024)throw new Error('Un archivo supera 40 MB.');const blob=new Blob([bytes],{type:typeof p.type==='string'?p.type:'audio/mpeg'});const decoded=await ctx.decodeAudioData(await blob.arrayBuffer());if(p.end>decoded.duration+.05)throw new Error('Un fragmento supera la duración del audio.');
-      allStored=(await addPassage({id:crypto.randomUUID(),family:p.family,title:p.title.slice(0,200),start:p.start,end:p.end,blob}))&&allStored;count++;
+      allStored=(await addPassage({id:crypto.randomUUID(),family:p.family,...(p.level===undefined?{}:{level:p.level}),title:p.title.slice(0,200),start:p.start,end:p.end,blob}))&&allStored;count++;
     }$('libraryStatus').textContent=`${count} pasaje(s) importado(s). ${allStored?'Guardados en este navegador.':'Solo disponibles en esta sesión; conserva el archivo exportado.'}`;
   }finally{busy=false;$('importLibrary').value='';renderControls();renderLibrary();}
 }
 async function init(){
-  drawWheel();families.forEach(f=>{const option=document.createElement('option');option.value=f.id;option.textContent=`${f.names[0]} / ${f.names[1]}`;$('familySelect').append(option);
+  drawWheel();families.forEach(f=>{f.names.forEach((name,level)=>{const option=document.createElement('option');option.value=`${f.id}:${level}`;option.textContent=name;$('familySelect').append(option);});
     const a=document.createElement('a');const recommended=recommendation(f.id);a.href=recommended.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=f.names[0];const span=document.createElement('span');span.textContent=f.work+' · '+(musicLinks[f.id]?'Escuchar':'Buscar en YouTube')+' ↗';a.append(span);$('suggestions').append(a);});
   try{db=await openDB();custom=await dbAll();}catch{$('libraryStatus').textContent='El almacenamiento local no está disponible. Puedes cargar audio para esta sesión y exportar tu colección.';}
+  try{await loadCurated();}catch(error){console.warn(error);$('libraryStatus').textContent='Biblioteca incluida no disponible. Puedes usar los bocetos o tus archivos.';}
   renderLibrary();renderControls();
 }
 $('exploreMode').onclick=()=>setMode('explore');$('challengeMode').onclick=()=>setMode('challenge');$('random').onclick=guard(randomPassage);$('stopMusic').onclick=stopMusic;$('record').onclick=guard(startRecording);$('finish').onclick=finishRecording;$('reveal').onclick=reveal;

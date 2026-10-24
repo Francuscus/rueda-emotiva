@@ -14,9 +14,9 @@ function harness(){
   class AudioContext{constructor(){this.destination=new AudioNode('speakers');this.currentTime=0;}createGain(){return new AudioNode('gain');}createDynamicsCompressor(){return new AudioNode('compressor');}createMediaStreamDestination(){const n=new AudioNode('recorder');n.stream={};return n;}createMediaStreamSource(){return new AudioNode('microphone');}resume(){return Promise.resolve();}}
   class MediaRecorder{static isTypeSupported(t){return t.startsWith('audio/webm');}constructor(stream,options){this.state='inactive';this.mimeType=options?.mimeType||'audio/webm';}start(){this.state='recording';}stop(){this.state='inactive';this.ondataavailable?.({data:new Blob(['test'],{type:this.mimeType})});queueMicrotask(()=>this.onstop?.());}}
   let stopped=false;const track={stop(){stopped=true;},onended:null};
-  const sandbox={document,console,AudioContext,MediaRecorder,Blob,URL,crypto:webcrypto,performance,setInterval,clearInterval,setTimeout,queueMicrotask,navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[track]})}},indexedDB:{open(){throw new Error('unavailable');}},addEventListener(){},isSecureContext:true};
+  const sandbox={fetch:async()=>({ok:true,json:async()=>({version:1,passages:[]})}),document,console,AudioContext,MediaRecorder,Blob,URL,crypto:webcrypto,performance,setInterval,clearInterval,setTimeout,queueMicrotask,navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[track]})}},indexedDB:{open(){throw new Error('unavailable');}},addEventListener(){},isSecureContext:true};
   sandbox.window=sandbox;
-  vm.createContext(sandbox);vm.runInContext(code,sandbox);
+  vm.createContext(sandbox);vm.runInContext(code.replace('init().catch(fail);','drawWheel();'),sandbox);
   return {run:s=>vm.runInContext(s,sandbox),document,wedges,nodes,micStopped:()=>stopped};
 }
 test('wheel has 24 keyboard-accessible sectors, three intensities, correct opposites',()=>{
@@ -46,4 +46,29 @@ test('reveal only reveals takes belonging to the current challenge',()=>{
 });
 test('challenge wheel guesses do not start or change the music',async()=>{
   const h=harness();h.run("mode='challenge';choice={family:'fear',roundId:'same'}");await h.run("wheelClick('joy',0)");assert.equal(h.run('choice.family'),'fear');assert.equal(h.run('active'),false);assert.match(h.document.getElementById('guess').textContent,/Éxtasis/);
+});
+
+test('new uploads and published music stay in their own intensity segment',async()=>{
+  const h=harness();
+  h.run("custom=[{family:'joy',level:0,title:'Ecstasy'},{family:'joy',level:2,title:'Serenity'}];curated=[{family:'fear',level:0,title:'Terror',kind:'curated'}]");
+  const ecstasy=await h.run("candidates('joy',0)");
+  assert.ok(ecstasy.some(p=>p.title==='Ecstasy'));
+  assert.ok(ecstasy.every(p=>p.level===0&&p.family==='joy'));
+  assert.ok(!ecstasy.some(p=>p.title==='Serenity'));
+  const terror=await h.run("candidates('fear',0)");
+  assert.equal(terror.length,1);assert.equal(terror[0].title,'Terror');
+  const outer=await h.run("candidates('fear',2)");
+  assert.equal(outer.length,2);assert.ok(outer.every(p=>p.kind==='demo'&&p.level===2));
+});
+test('random pool covers all 24 emotions and legacy files remain available',async()=>{
+  const h=harness();h.run("custom=[{family:'trust',title:'Legacy'}]");
+  const pool=await h.run('candidates()');
+  assert.equal(new Set(pool.map(p=>p.family+':'+p.level)).size,24);
+  assert.equal(pool.filter(p=>p.title==='Legacy').length,3);
+  assert.equal((await h.run("candidates('trust',2)")).filter(p=>p.title==='Legacy').length,1);
+});
+test('published library rejects paths outside its audio directory',async()=>{
+  const h=harness();
+  h.run("fetch=async()=>({ok:true,json:async()=>({version:1,passages:[{family:'joy',level:0,title:'Bad',path:'music/audio/../../secret',duration:55}]})})");
+  await assert.rejects(h.run('loadCurated()'),/Pasaje publicado no válido/);
 });
