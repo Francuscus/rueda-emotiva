@@ -272,6 +272,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 55.584
+    },
+    {
+      "id": "aprension-voz-piano-01",
+      "family": "fear",
+      "level": 2,
+      "emotion": "Aprensión",
+      "tradition": "Cinematic / wordless voice and toy piano",
+      "title": "Aprensión · Voz infantil y piano de juguete",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/fear/aprension/voz-piano-01.mp3",
+      "duration": 54.864,
+      "sourceUrl": "https://suno.com/song/02b41678-074e-488a-accb-d4f1fe101690",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "High childlike wordless voice and detuned toy piano requested to evoke restrained apprehension and a haunted nursery atmosphere.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 54.864
     }
   ]
 }
