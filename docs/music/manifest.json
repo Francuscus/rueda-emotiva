@@ -357,6 +357,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 54.792
+    },
+    {
+      "id": "melancolia-piano-01",
+      "family": "sadness",
+      "level": 2,
+      "emotion": "Melancolía",
+      "tradition": "Impressionist / solo piano",
+      "title": "Melancolía · Piano solo",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/sadness/melancolia/piano-01.mp3",
+      "duration": 54.792,
+      "sourceUrl": "https://suno.com/song/defd6849-a3b5-400f-81bf-08d7bf7a148a",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Spare descending piano phrases, warm suspensions and quiet rubato intended to convey gentle melancholy below sadness and grief.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 54.792
     }
   ]
 }
