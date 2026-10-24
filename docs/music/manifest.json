@@ -208,6 +208,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 55.224
+    },
+    {
+      "id": "tristeza-folk-01",
+      "family": "sadness",
+      "level": 1,
+      "emotion": "Tristeza",
+      "tradition": "Contemporary / acoustic folk trio",
+      "title": "Tristeza · Trío folk",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/sadness/tristeza/folk-01.mp3",
+      "duration": 54.552,
+      "sourceUrl": "https://suno.com/song/0cb4aeae-a974-4b8b-992d-d0a97a83fa64",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Fingerpicked guitar, restrained cello and soft percussion intended to convey sadness with breathing room, below profound grief.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 54.552
     }
   ]
 }
