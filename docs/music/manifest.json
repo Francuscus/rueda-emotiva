@@ -323,6 +323,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 57.624
+    },
+    {
+      "id": "distraccion-marimba-01",
+      "family": "surprise",
+      "level": 2,
+      "emotion": "Distracción",
+      "tradition": "Contemporary / solo marimba",
+      "title": "Distracción · Marimba sola",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/surprise/distraccion/marimba-01.mp3",
+      "duration": 54.96,
+      "sourceUrl": "https://suno.com/song/ca2684cf-40e3-4de9-86ee-8ba3fac6ce06",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Wandering marimba fragments, displaced accents and irregular pauses intended to convey gentle distraction.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 54.96
     }
   ]
 }
