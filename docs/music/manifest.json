@@ -306,6 +306,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 54.84
+    },
+    {
+      "id": "aceptacion-saxofon-01",
+      "family": "trust",
+      "level": 2,
+      "emotion": "Aceptación",
+      "tradition": "Jazz / unaccompanied tenor saxophone",
+      "title": "Aceptación · Saxofón solo",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/trust/aceptacion/saxofon-01.mp3",
+      "duration": 57.624,
+      "sourceUrl": "https://suno.com/song/f8f979e4-05ad-4b9a-8771-5c1537420ae9",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Warm unaccompanied tenor saxophone and patient breath-shaped phrases intended to convey quiet acceptance.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 57.624
     }
   ]
 }
