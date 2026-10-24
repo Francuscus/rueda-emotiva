@@ -51,6 +51,23 @@
       "review": "Technical decode and level checks passed; listening review pending.",
       "start": 0,
       "end": 54.84
+    },
+    {
+      "id": "admiracion-orquesta-01",
+      "family": "trust",
+      "level": 0,
+      "emotion": "Admiración",
+      "tradition": "Classical / cinematic orchestra",
+      "title": "Admiración · Orquesta",
+      "creator": "itsonlyadogtick via Suno",
+      "path": "music/audio/trust/admiracion/orquesta-01.mp3",
+      "duration": 56.424,
+      "sourceUrl": "https://suno.com/song/6480693a-35f5-4533-9e85-14b6e1ceaa99",
+      "license": "Generated under user's Suno Premier subscription; user-provided official MP3 download. Subject to https://suno.com/terms. Not covered by repository MIT code license.",
+      "rationale": "Broad horn phrases, luminous strings and rising harmonic suspensions intended to convey reverence and grandeur.",
+      "review": "Technical decode and level checks passed; listening review pending.",
+      "start": 0,
+      "end": 56.424
     }
   ]
 }
