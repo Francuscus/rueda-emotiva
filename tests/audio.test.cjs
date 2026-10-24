@@ -11,7 +11,7 @@ function harness(){
   const document={getElementById(id){if(!elements.has(id))elements.set(id,element());return elements.get(id);},createElement:element,createElementNS(ns,tag){const e=element();if(tag==='g')wedges.push(e);return e;},querySelectorAll(selector){return selector==='.wedge'?wedges:[];}};
   document.getElementById('monitorLevel').value='.45';document.getElementById('musicLevel').value='.22';document.getElementById('voiceLevel').value='1';
   class AudioNode{constructor(type){this.type=type;this.outputs=[];this.gain={setTargetAtTime(v){this.value=v;}};nodes.push(this);}connect(other){this.outputs.push(other);}disconnect(){this.outputs=[];}}
-  class AudioContext{constructor(){this.destination=new AudioNode('speakers');this.currentTime=0;}createGain(){return new AudioNode('gain');}createDynamicsCompressor(){return new AudioNode('compressor');}createMediaStreamDestination(){const n=new AudioNode('recorder');n.stream={};return n;}createMediaStreamSource(){return new AudioNode('microphone');}resume(){return Promise.resolve();}}
+  class AudioContext{constructor(){this.destination=new AudioNode('speakers');this.currentTime=0;}createGain(){return new AudioNode('gain');}createDynamicsCompressor(){const n=new AudioNode('compressor');for(const p of ['threshold','knee','ratio','attack','release'])n[p]={value:0};return n;}createBufferSource(){const n=new AudioNode('source');n.start=()=>{};n.stop=()=>{};return n;}createMediaStreamDestination(){const n=new AudioNode('recorder');n.stream={};return n;}createMediaStreamSource(){return new AudioNode('microphone');}resume(){return Promise.resolve();}}
   class MediaRecorder{static isTypeSupported(t){return t.startsWith('audio/webm');}constructor(stream,options){this.state='inactive';this.mimeType=options?.mimeType||'audio/webm';}start(){this.state='recording';}stop(){this.state='inactive';this.ondataavailable?.({data:new Blob(['test'],{type:this.mimeType})});queueMicrotask(()=>this.onstop?.());}}
   let stopped=false;const track={stop(){stopped=true;},onended:null};
   const sandbox={fetch:async()=>({ok:true,json:async()=>({version:1,passages:[]})}),document,console,AudioContext,MediaRecorder,Blob,URL,crypto:webcrypto,performance,setInterval,clearInterval,setTimeout,queueMicrotask,navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[track]})}},indexedDB:{open(){throw new Error('unavailable');}},addEventListener(){},isSecureContext:true};
@@ -31,7 +31,7 @@ test('microphone has no path to speaker output, but reaches both recording strea
   function reaches(start,target,seen=new Set()){if(start===target)return true;if(seen.has(start))return false;seen.add(start);return start.outputs.some(n=>reaches(n,target,seen));}
   const voice=h.run('voiceGain'),music=h.run('musicBus'),speakers=h.run('ctx.destination');
   assert.equal(reaches(voice,speakers),false);assert.equal(reaches(music,speakers),true);
-  assert.equal(reaches(voice,h.run('voiceDestination')),true);assert.equal(reaches(voice,h.run('mixedDestination')),true);
+  assert.equal(reaches(voice,h.run('voiceDestination')),false);assert.equal(reaches(voice,h.run('mixedDestination')),true);
   assert.equal(reaches(music,h.run('voiceDestination')),false);assert.equal(reaches(music,h.run('mixedDestination')),true);
 });
 test('recording stops music, releases microphone, and creates voice and mixed downloads',async()=>{
@@ -39,6 +39,8 @@ test('recording stops music, releases microphone, and creates voice and mixed do
   h.run('finishRecording()');await new Promise(resolve=>setImmediate(resolve));
   assert.equal(h.run('recording'),false);assert.equal(h.run('busy'),false);assert.equal(h.run('active'),false);assert.equal(h.micStopped(),true);
   assert.equal(h.run('takes.length'),1);assert.ok(h.run('takes[0].voice.size')>0);assert.ok(h.run('takes[0].mixed.size')>0);
+  assert.ok(h.run('takes[0].music.size')>0);
+  assert.equal(h.run('takes[0].mixLevels.music'),.22);
 });
 test('reveal only reveals takes belonging to the current challenge',()=>{
   const h=harness();h.run("choice={family:'fear',level:0,title:'Hidden',roundId:'new'};takes=[{choice:{roundId:'old'},revealed:false},{choice:{roundId:'new'},revealed:false}];renderTakes=()=>{};reveal()");
@@ -72,3 +74,27 @@ test('published library rejects paths outside its audio directory',async()=>{
   h.run("fetch=async()=>({ok:true,json:async()=>({version:1,passages:[{family:'joy',level:0,title:'Bad',path:'music/audio/../../secret',duration:55}]})})");
   await assert.rejects(h.run('loadCurated()'),/Pasaje publicado no válido/);
 });
+
+test('playback graph uses separate voice/music gains and live edits preserve the originals',()=>{
+  const h=harness();h.run("audioSetup();const testTake={mixLevels:{voice:1,music:.22},voice:new Blob(['voice']),music:new Blob(['music'])};const testGraph=takeGraph(ctx,[{duration:1},{duration:1}],testTake.mixLevels);remixPreview={...testGraph,take:testTake};updateTakeLevel(testTake,'music',.07)");
+  assert.equal(h.run('testGraph.gains[0].gain.value'),1);
+  assert.equal(h.run('testGraph.gains[1].gain.value'),.07);
+  assert.equal(h.run('testTake.mixLevels.music'),.07);
+  assert.equal(h.run('testTake.voice.size'),5);assert.equal(h.run('testTake.music.size'),5);
+});
+test('WAV export encodes stereo PCM with correct duration, channel order and clipping bounds',async()=>{
+  const h=harness();const blob=h.run("wavBlob({numberOfChannels:2,length:3,sampleRate:44100,getChannelData:i=>i===0?new Float32Array([1,-1,.5]):new Float32Array([2,-2,0])})");
+  const data=new DataView(await blob.arrayBuffer());
+  assert.equal(blob.type,'audio/wav');assert.equal(blob.size,44+3*2*2);
+  assert.equal(data.getUint16(22,true),2);assert.equal(data.getUint32(24,true),44100);assert.equal(data.getUint32(40,true),12);
+  assert.equal(data.getInt16(44,true),32767);assert.equal(data.getInt16(46,true),32767);assert.equal(data.getInt16(48,true),-32768);assert.equal(data.getInt16(50,true),-32768);assert.equal(data.getInt16(52,true),16384);assert.equal(data.getInt16(54,true),0);
+});
+test('raw microphone and music stems bypass recording gain controls',async()=>{
+  const h=harness();h.document.getElementById('voiceLevel').value=0;h.document.getElementById('musicLevel').value=0;
+  h.run("audioSetup();active=true;choice={family:'joy',level:0,title:'Demo',roundId:'one'}");await h.run('startRecording()');
+  assert.equal(h.run('micNode.outputs.includes(voiceDestination)'),true);
+  assert.equal(h.run('musicBus.outputs.includes(musicDestination)'),true);
+  assert.equal(h.run('voiceGain.outputs.includes(voiceDestination)'),false);
+  h.run('finishRecording()');await new Promise(resolve=>setImmediate(resolve));
+});
+

@@ -24,7 +24,8 @@ function showRecommendation(id) {
 const $ = id => document.getElementById(id);
 let mode='explore', selected=null, choice=null, revealed=false, active=false, recording=false, busy=false;
 let ctx, musicBus, monitorGain, mixGain, voiceGain, compressor, mixedDestination, voiceDestination, source, micStream, micNode;
-let mixedRecorder, voiceRecorder, timerHandle, startedAt, db=null, custom=[], curated=[], takes=[], loadSequence=0;
+let mixedRecorder, voiceRecorder, musicRecorder, musicDestination, timerHandle, startedAt, db=null, custom=[], curated=[], takes=[], loadSequence=0;
+let remixPreview=null, previewSequence=0;
 const sketchCache=new Map();
 function message(text){$('status').textContent=text;}
 function fail(error){console.error(error);message(error.name==='NotAllowedError'?'Permite el micrófono en los ajustes del sitio y vuelve a intentarlo.':error.message || 'No se pudo completar la operación.');}
@@ -61,9 +62,9 @@ function audioSetup(){
   if(ctx)return;
   const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)throw new Error('Este navegador no permite procesar audio. Prueba Chrome, Edge, Firefox o Safari actualizado.');
   ctx=new Audio();musicBus=ctx.createGain();monitorGain=ctx.createGain();mixGain=ctx.createGain();voiceGain=ctx.createGain();compressor=ctx.createDynamicsCompressor();
-  mixedDestination=ctx.createMediaStreamDestination();voiceDestination=ctx.createMediaStreamDestination();
+  mixedDestination=ctx.createMediaStreamDestination();voiceDestination=ctx.createMediaStreamDestination();musicDestination=ctx.createMediaStreamDestination();
   musicBus.connect(monitorGain);monitorGain.connect(ctx.destination);
-  musicBus.connect(mixGain);mixGain.connect(compressor);voiceGain.connect(compressor);voiceGain.connect(voiceDestination);compressor.connect(mixedDestination);
+  musicBus.connect(mixGain);mixGain.connect(compressor);voiceGain.connect(compressor);compressor.connect(mixedDestination);musicBus.connect(musicDestination);
   updateGains();
 }
 function updateGains(){if(!ctx)return;monitorGain.gain.setTargetAtTime(Number($('monitorLevel').value),ctx.currentTime,.03);mixGain.gain.setTargetAtTime(Number($('musicLevel').value),ctx.currentTime,.03);voiceGain.gain.setTargetAtTime(Number($('voiceLevel').value),ctx.currentTime,.03);}
@@ -115,6 +116,7 @@ async function candidates(id=null,level=null){
 function stopSource(){if(source){source.onended=null;try{source.stop();}catch{}source.disconnect();source=null;}active=false;}
 function stopMusic(){if(recording||busy)return;loadSequence++;stopSource();renderControls();message('Música detenida.');}
 async function playChoice(p,level=p.level??0){
+  pauseRemix();
   const token=++loadSequence;busy=true;renderControls();stopSource();message('Preparando audio…');
   try{
     audioSetup();await ctx.resume();
@@ -167,30 +169,31 @@ async function startRecording(){
   if(!active||recording||busy)return;
   if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia)throw new Error('El micrófono necesita una página HTTPS. Abre la aplicación publicada en GitHub Pages.');
   if(!window.MediaRecorder)throw new Error('Este navegador no permite grabar audio. Prueba un navegador actualizado.');
-  busy=true;renderControls();document.querySelectorAll('audio').forEach(a=>a.pause());
+  busy=true;renderControls();pauseRemix();document.querySelectorAll('audio').forEach(a=>a.pause());
   try{
     audioSetup();await ctx.resume();micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false});
-    micNode=ctx.createMediaStreamSource(micStream);micNode.connect(voiceGain);
-    mixedRecorder=recorderFor(mixedDestination.stream);voiceRecorder=recorderFor(voiceDestination.stream);
-    const mixed=[],voice=[],takeChoice={...choice},poem=$('poem').value;
+    micNode=ctx.createMediaStreamSource(micStream);micNode.connect(voiceGain);micNode.connect(voiceDestination);
+    mixedRecorder=recorderFor(mixedDestination.stream);voiceRecorder=recorderFor(voiceDestination.stream);musicRecorder=recorderFor(musicDestination.stream);
+    const mixed=[],voice=[],music=[],takeChoice={...choice},poem=$('poem').value;
     mixedRecorder.ondataavailable=e=>{if(e.data.size)mixed.push(e.data);};voiceRecorder.ondataavailable=e=>{if(e.data.size)voice.push(e.data);};
+    musicRecorder.ondataavailable=e=>{if(e.data.size)music.push(e.data);};
     let stopped=0,recorderError=false;
-    const done=()=>{if(++stopped<2)return;busy=false;renderControls();if(recorderError){message('La grabación falló. Vuelve a intentar una toma.');return;}if(!mixed.length||!voice.length){message('No se recibió audio. Comprueba el micrófono y vuelve a intentar.');return;}
+    const done=()=>{if(++stopped<3)return;busy=false;renderControls();if(recorderError){message('La grabación falló. Vuelve a intentar una toma.');return;}if(!mixed.length||!voice.length||!music.length){message('No se recibió audio. Comprueba el micrófono y vuelve a intentar.');return;}
       const take={id:Date.now(),choice:takeChoice,poem,duration:Math.max(1,Math.round((performance.now()-startedAt)/1000)),revealed:mode==='explore'||revealed,
-        mixed:new Blob(mixed,{type:mixedRecorder.mimeType||mixed[0].type}),voice:new Blob(voice,{type:voiceRecorder.mimeType||voice[0].type})};
+        mixed:new Blob(mixed,{type:mixedRecorder.mimeType||mixed[0].type}),voice:new Blob(voice,{type:voiceRecorder.mimeType||voice[0].type}),music:new Blob(music,{type:musicRecorder.mimeType||music[0].type}),mixLevels:{voice:Number($('voiceLevel').value),music:Number($('musicLevel').value)},playhead:0};
       takes.unshift(take);renderTakes();message('Toma lista. Descárgala para conservarla.');};
-    mixedRecorder.onstop=done;voiceRecorder.onstop=done;
-    for(const rec of [mixedRecorder,voiceRecorder])rec.onerror=()=>{recorderError=true;finishRecording();message('Error de grabación. Revisa el micrófono y vuelve a intentarlo.');};
-    mixedRecorder.start(250);voiceRecorder.start(250);recording=true;startedAt=performance.now();
+    mixedRecorder.onstop=done;voiceRecorder.onstop=done;musicRecorder.onstop=done;
+    for(const rec of [mixedRecorder,voiceRecorder,musicRecorder])rec.onerror=()=>{recorderError=true;finishRecording();message('Error de grabación. Revisa el micrófono y vuelve a intentarlo.');};
+    mixedRecorder.start(250);voiceRecorder.start(250);musicRecorder.start(250);recording=true;startedAt=performance.now();
     for(const track of micStream.getTracks())track.onended=()=>{finishRecording();message('Se desconectó el micrófono. La toma se ha detenido.');};
     timerHandle=setInterval(()=>{const elapsed=Math.floor((performance.now()-startedAt)/1000);$('timer').textContent=formatTime(elapsed);if(elapsed>=300)finishRecording();},250);
     message('Grabando voz + música. Recita tu poema. Máximo: 5 minutos.');
-  }catch(e){for(const rec of [mixedRecorder,voiceRecorder])if(rec?.state==='recording')rec.stop();stopMic();stopSource();throw e;}
+  }catch(e){for(const rec of [mixedRecorder,voiceRecorder,musicRecorder])if(rec?.state==='recording')rec.stop();stopMic();stopSource();throw e;}
   finally{busy=false;renderControls();}
 }
 function finishRecording(){
   if(!recording)return;recording=false;busy=true;clearInterval(timerHandle);
-  for(const rec of [mixedRecorder,voiceRecorder])if(rec?.state==='recording')rec.stop();
+  for(const rec of [mixedRecorder,voiceRecorder,musicRecorder])if(rec?.state==='recording')rec.stop();
   stopSource();stopMic();renderControls();message('Preparando tu interpretación…');
 }
 function formatTime(s){return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;}
@@ -201,14 +204,90 @@ function reveal(){
   renderTakes();renderControls();message('Emoción revelada. Escucha la interpretación con el público.');
 }
 function ext(blob){return blob.type.includes('mp4')?'m4a':blob.type.includes('ogg')?'ogg':'webm';}
+async function takeBuffers(t){
+  audioSetup();
+  if(!t.buffersPromise)t.buffersPromise=Promise.all([ctx.decodeAudioData(await t.voice.arrayBuffer()),ctx.decodeAudioData(await t.music.arrayBuffer())]).catch(error=>{t.buffersPromise=null;throw new Error('No se pudieron abrir las pistas para mezclar. Puedes descargar la mezcla original y la voz sola. '+error.message);});
+  return t.buffersPromise;
+}
+function takeGraph(context,buffers,levels){
+  const limiter=context.createDynamicsCompressor();limiter.threshold.value=-3;limiter.knee.value=0;limiter.ratio.value=20;limiter.attack.value=.003;limiter.release.value=.1;limiter.connect(context.destination);
+  const sources=[],gains=[];
+  buffers.forEach((buffer,i)=>{const s=context.createBufferSource(),g=context.createGain();s.buffer=buffer;g.gain.value=i===0?levels.voice:levels.music;s.connect(g);g.connect(limiter);sources.push(s);gains.push(g);});
+  return {sources,gains,limiter};
+}
+function pauseRemix(){
+  previewSequence++;
+  if(!remixPreview)return;
+  const p=remixPreview;remixPreview=null;clearInterval(p.timer);
+  p.take.playhead=Math.min(p.duration,p.offset+Math.max(0,ctx.currentTime-p.when));
+  for(const s of p.sources){try{s.stop();}catch{}s.disconnect();}
+  for(const g of p.gains)g.disconnect();p.limiter.disconnect();
+  p.take.remixUI.play.textContent='▶ Escuchar mezcla';p.take.remixUI.seek.value=p.take.playhead;p.take.remixUI.clock.textContent=formatTime(Math.floor(p.take.playhead));
+}
+async function playRemix(t){
+  if(recording||busy)throw new Error('Termina la grabación antes de escuchar una toma.');
+  if(remixPreview?.take===t){pauseRemix();return;}
+  pauseRemix();if(active)stopMusic();document.querySelectorAll('audio').forEach(a=>a.pause());
+  const token=previewSequence;t.remixUI.play.textContent='Preparando…';
+  try{
+    audioSetup();await ctx.resume();const buffers=await takeBuffers(t);
+    if(token!==previewSequence||recording||busy)return;
+    const duration=Math.max(...buffers.map(b=>b.duration));if(t.playhead>=duration-.02)t.playhead=0;
+    const graph=takeGraph(ctx,buffers,t.mixLevels),when=ctx.currentTime+.03,offset=t.playhead||0;
+    graph.sources.forEach(s=>{if(offset<s.buffer.duration)s.start(when,offset);});
+    const p={...graph,take:t,duration,when,offset,timer:null};remixPreview=p;t.remixUI.play.textContent='Ⅱ Pausar mezcla';t.remixUI.seek.max=duration;
+    p.timer=setInterval(()=>{if(remixPreview!==p)return;const pos=Math.min(duration,offset+Math.max(0,ctx.currentTime-when));t.remixUI.seek.value=pos;t.remixUI.clock.textContent=formatTime(Math.floor(pos));if(pos>=duration){pauseRemix();t.playhead=0;t.remixUI.seek.value=0;}},100);
+  }finally{if(remixPreview?.take!==t)t.remixUI.play.textContent='▶ Escuchar mezcla';}
+}
+function updateTakeLevel(t,key,value){
+  t.mixLevels[key]=Number(value);
+  if(remixPreview?.take===t)remixPreview.gains[key==='voice'?0:1].gain.setTargetAtTime(Number(value),ctx.currentTime,.015);
+}
+function wavBlob(buffer){
+  const channels=buffer.numberOfChannels,frames=buffer.length,bytes=channels*frames*2;
+  const data=new ArrayBuffer(44+bytes),view=new DataView(data);
+  function ascii(offset,text){for(let i=0;i<text.length;i++)view.setUint8(offset+i,text.charCodeAt(i));}
+  ascii(0,'RIFF');view.setUint32(4,36+bytes,true);ascii(8,'WAVE');ascii(12,'fmt ');view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,channels,true);view.setUint32(24,buffer.sampleRate,true);view.setUint32(28,buffer.sampleRate*channels*2,true);view.setUint16(32,channels*2,true);view.setUint16(34,16,true);ascii(36,'data');view.setUint32(40,bytes,true);
+  const tracks=Array.from({length:channels},(_,i)=>buffer.getChannelData(i));let offset=44;
+  for(let frame=0;frame<frames;frame++)for(let ch=0;ch<channels;ch++){const sample=Math.max(-1,Math.min(1,tracks[ch][frame]));view.setInt16(offset,Math.round(sample*(sample<0?32768:32767)),true);offset+=2;}
+  return new Blob([data],{type:'audio/wav'});
+}
+async function exportTake(t){
+  if(t.exporting||recording||busy)return;
+  t.exporting=true;const button=t.remixUI.download,levels={...t.mixLevels};button.disabled=true;button.textContent='Preparando WAV…';
+  try{
+    const buffers=await takeBuffers(t),rate=44100,duration=Math.max(...buffers.map(b=>b.duration));
+    const offline=new OfflineAudioContext(2,Math.ceil(duration*rate),rate),graph=takeGraph(offline,buffers,levels);graph.sources.forEach(s=>s.start(0));
+    const rendered=await offline.startRendering();downloadBlob(wavBlob(rendered),`rueda-emotiva-${t.id}-mezcla-ajustada.wav`);
+    message('Mezcla descargada con el balance de voz y música elegido.');
+  }finally{t.exporting=false;for(const b of new Set([button,t.remixUI.download])){b.disabled=false;b.textContent='↓ Descargar mezcla ajustada (WAV)';}}
+}
+function remixEditor(t){
+  t.mixLevels??={voice:1,music:.22};t.playhead??=0;
+  const editor=document.createElement('section');editor.className='remix-editor';editor.setAttribute('aria-label','Ajustar balance de la toma');
+  const title=document.createElement('h4');title.textContent='Ajusta tu mezcla';editor.append(title);
+  for(const [key,name,max] of [['voice','Voz',2],['music','Música',1]]){
+    const label=document.createElement('label'),text=document.createElement('span'),slider=document.createElement('input'),value=document.createElement('output');
+    text.textContent=name;slider.type='range';slider.min=0;slider.max=max;slider.step=.01;slider.value=t.mixLevels[key];slider.setAttribute('aria-label',name+' en la mezcla de esta toma');value.textContent=Math.round(t.mixLevels[key]*100)+'%';
+    slider.oninput=()=>{updateTakeLevel(t,key,slider.value);value.textContent=Math.round(Number(slider.value)*100)+'%';};label.append(text,slider,value);editor.append(label);
+  }
+  const controls=document.createElement('div');controls.className='transport';const play=document.createElement('button');play.textContent='▶ Escuchar mezcla';play.onclick=guard(()=>playRemix(t));
+  const seek=document.createElement('input');seek.type='range';seek.min=0;seek.max=t.duration;seek.step=.01;seek.value=t.playhead;seek.setAttribute('aria-label','Posición de reproducción');
+  seek.onchange=guard(async()=>{const requested=Number(seek.value),wasPlaying=remixPreview?.take===t;if(wasPlaying)pauseRemix();t.playhead=requested;seek.value=requested;clock.textContent=formatTime(Math.floor(t.playhead));if(wasPlaying)await playRemix(t);});
+  const clock=document.createElement('output');clock.textContent=formatTime(Math.floor(t.playhead));controls.append(play,seek,clock);editor.append(controls);
+  const download=document.createElement('button');download.className='primary';download.textContent=t.exporting?'Preparando WAV…':'↓ Descargar mezcla ajustada (WAV)';download.disabled=!!t.exporting;download.onclick=guard(()=>exportTake(t));editor.append(download);
+  const hint=document.createElement('p');hint.className='caption';hint.textContent='Los controles cambian el balance mientras escuchas. El WAV incluye los niveles elegidos al pulsar Descargar. La grabación original se conserva.';editor.append(hint);t.remixUI={play,seek,clock,download};return editor;
+}
 function renderTakes(){
+  pauseRemix();
   $('emptyTakes').hidden=takes.length>0;const list=$('takeList');
   for(const a of list.querySelectorAll('audio')){a.pause();URL.revokeObjectURL(a.src);}list.replaceChildren();
   takes.forEach((t,index)=>{
     const box=document.createElement('article');box.className='take';const heading=document.createElement('h3');heading.textContent=`Toma ${takes.length-index} · ${t.revealed?family(t.choice.family).names[t.choice.level]:'Emoción oculta'} · ${formatTime(t.duration)}`;box.append(heading);
     const info=document.createElement('p');info.className='caption';info.textContent=t.revealed?t.choice.title:'Revela el pasaje después de las respuestas del público.';box.append(info);
-    function version(blob,label){const wrap=document.createElement('div'),l=document.createElement('label'),audio=document.createElement('audio'),link=document.createElement('a');l.textContent=label;audio.controls=true;audio.preload='metadata';audio.src=URL.createObjectURL(blob);audio.addEventListener('play',()=>{if(recording||busy){audio.pause();return;}if(active)stopMusic();document.querySelectorAll('audio').forEach(other=>{if(other!==audio)other.pause();});});link.href=audio.src;link.download=`rueda-emotiva-${t.id}-${label==='Voz sola'?'voz':'mezcla'}.${ext(blob)}`;link.textContent=`Descargar ${label.toLowerCase()}`;wrap.append(l,audio,link);return wrap;}
-    box.append(version(t.mixed,'Voz + música'));if(!t.revealed){const show=document.createElement('button');show.textContent='Revelar esta toma';show.onclick=()=>{if(recording||busy)return;t.revealed=true;renderTakes();};box.append(show);}const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Escuchar la voz sola / ver el texto';details.append(summary,version(t.voice,'Voz sola'));const text=document.createElement('p');text.style.whiteSpace='pre-wrap';text.textContent=t.poem;details.append(text);box.append(details);
+    function version(blob,label){const wrap=document.createElement('div'),l=document.createElement('label'),audio=document.createElement('audio'),link=document.createElement('a');l.textContent=label;audio.controls=true;audio.preload='metadata';audio.src=URL.createObjectURL(blob);audio.addEventListener('play',()=>{if(recording||busy){audio.pause();return;}pauseRemix();if(active)stopMusic();document.querySelectorAll('audio').forEach(other=>{if(other!==audio)other.pause();});});link.href=audio.src;link.download=`rueda-emotiva-${t.id}-${label==='Voz sola'?'voz':'mezcla'}.${ext(blob)}`;link.textContent=`Descargar ${label.toLowerCase()}`;wrap.append(l,audio,link);return wrap;}
+    if(t.music)box.append(remixEditor(t));else box.append(version(t.mixed,'Voz + música'));
+    if(!t.revealed){const show=document.createElement('button');show.textContent='Revelar esta toma';show.onclick=()=>{if(recording||busy)return;t.revealed=true;renderTakes();};box.append(show);}const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Voz sola, mezcla original y texto';details.append(summary,version(t.voice,'Voz sola'));if(t.music)details.append(version(t.mixed,'Mezcla original'));const text=document.createElement('p');text.style.whiteSpace='pre-wrap';text.textContent=t.poem;details.append(text);box.append(details);
     const remove=document.createElement('button');remove.textContent='Eliminar toma';remove.disabled=recording;remove.onclick=()=>{takes=takes.filter(x=>x!==t);renderTakes();};box.append(remove);list.append(box);
   });
 }
@@ -262,5 +341,6 @@ $('exploreMode').onclick=()=>setMode('explore');$('challengeMode').onclick=()=>s
 for(const id of ['monitorLevel','musicLevel','voiceLevel'])$(id).oninput=updateGains;
 $('uploadForm').onsubmit=guard(upload);$('exportLibrary').onclick=guard(exportLibrary);$('importLibrary').onchange=guard(importLibrary);
 window.addEventListener('beforeunload',e=>{if(recording||takes.length){e.preventDefault();e.returnValue='';}});
-window.addEventListener('pagehide',()=>{if(recording)finishRecording();stopMic();stopSource();});
+window.addEventListener('pagehide',()=>{pauseRemix();if(recording)finishRecording();stopMic();stopSource();});
 init().catch(fail);
+

@@ -37,7 +37,7 @@ Hay enlaces de búsqueda en YouTube para las obras sugeridas. **Estas grabacione
 - Selecciona los auriculares como salida en el sistema. El sitio no puede garantizar que la salida elegida sea privada. Haz una prueba antes de la actividad. El público oirá la voz en vivo, pero no debe oír la música.
 - La música se envía a los auriculares y a la mezcla de grabación por controles de volumen separados. La voz se envía a la grabación y a la pista de voz sola; **no** se devuelve al altavoz ni a los auriculares.
 - La toma comienza cuando el micrófono está listo. El acompañamiento se graba desde ese mismo momento, después del periodo de escucha inicial.
-- Ajusta **Música en la grabación** y **Voz en la grabación** antes o durante la toma. Esos ajustes quedan incorporados al archivo; no hay editor de mezcla posterior.
+- Ajusta **Música en la grabación** y **Voz en la grabación** antes o durante la toma. Esos ajustes quedan incorporados a la mezcla original. Las nuevas tomas conservan además pistas independientes para ajustar el balance después.
 - La grabación termina automáticamente a los cinco minutos y libera el micrófono. Un corte del micrófono también detiene la toma.
 - Las tomas solo permanecen en memoria hasta cerrar o recargar la página. **Descarga las tomas para conservarlas.** Se avisa al salir, aunque algunos navegadores pueden omitir ese aviso.
 - No se envían grabaciones a GitHub, a un profesor ni a otro servidor. No se necesitan cuentas de alumno.
@@ -57,3 +57,7 @@ Código bajo MIT; consulta `LICENSE`. Audio añadido por los usuarios sujeto a s
 ## Carpeta de publicación
 
 GitHub Pages debe publicar desde `main` → `/docs`. La carpeta `docs/` contiene la copia publicada de `index.html`, `styles.css` y `app.js`; sincroniza esos archivos cuando cambies la aplicación de la raíz.
+
+## Ajustar la mezcla después de grabar
+
+Las nuevas tomas guardan voz y música por separado, antes de los controles de volumen de grabación. En la tarjeta de cada toma, usa **Voz** y **Música**, pulsa **Escuchar mezcla** y ajusta los niveles durante la reproducción. Puedes pausar y cambiar de posición. **Descargar mezcla ajustada (WAV)** renderiza ambas pistas con los niveles seleccionados al pulsar el botón. La mezcla incluye un limitador; la voz sola y la mezcla original siguen disponibles en el desplegable. La exportación WAV es estéreo PCM de 16 bits a 44,1 kHz. Las grabaciones anteriores que solo tienen una mezcla no se pueden separar retroactivamente. Las tomas siguen en memoria durante la sesión: descarga antes de cerrar o recargar.
